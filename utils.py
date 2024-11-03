@@ -110,3 +110,24 @@ def eval_metrics(y_true, y_pred, type="classification"):
         "MAE": mean_absolute_error(y_true, y_pred),
         "R2": r2_score(y_true, y_pred)
     }
+
+def plot_pred_true(pred, true):
+    plt.figure(figsize=(6, 4))
+
+    plt.scatter(
+        pred, true
+    )
+
+    plt.xlabel("T pred", fontsize=16)
+    plt.ylabel("T true", fontsize=16)
+
+    plt.legend(fontsize=16)
+
+def plot_importance(importances, labels):
+    plt.figure(figsize=(6, 4))
+
+    plt.bar(range(len(importances)), importances, tick_label=labels)
+
+    plt.grid(alpha=0.4)
+    plt.xticks(rotation=90, fontsize=12)
+    plt.ylabel("Feature Importance", fontsize=16)
