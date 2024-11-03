@@ -58,7 +58,7 @@ def compute_descriptors(smiles, descriptors):
     
     return pd.Series(X)
     
-def create_data(df, descriptors: list, apply_norm=False, radius=2, nbits=2048, fingerprints_pca=True, pca_dim=32) -> tuple:
+def create_data(df, descriptors: list, create_fingerprints=True, apply_norm=False, radius=2, nbits=2048, fingerprints_pca=True, pca_dim=32) -> tuple:
     '''
     Arguments:
     -------
@@ -77,12 +77,15 @@ def create_data(df, descriptors: list, apply_norm=False, radius=2, nbits=2048, f
     smiles = df['smiles']
     y = df['label'].values
 
-    df['fingerprints'] = smiles.apply(compute_fingerprints, args=(radius, nbits,))
-    df = df.dropna(subset=['fingerprints'])
-    X_fps = np.array([np.array(fp) for fp in df['fingerprints']])
-    if fingerprints_pca:
-        pca = PCA(n_components=pca_dim)
-        X_fps = pca.fit_transform(X_fps)
+    if create_fingerprints:
+        df['fingerprints'] = smiles.apply(compute_fingerprints, args=(radius, nbits,))
+        df = df.dropna(subset=['fingerprints'])
+        X_fps = np.array([np.array(fp) for fp in df['fingerprints']])
+        if fingerprints_pca:
+            pca = PCA(n_components=pca_dim)
+            X_fps = pca.fit_transform(X_fps)
+    else:
+        X_fps = None
 
     X_at = smiles.apply(compute_descriptors, args=(descriptors,))
     X_at = np.array(X_at)
