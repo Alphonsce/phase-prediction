@@ -17,7 +17,7 @@ from sklearn.preprocessing import normalize
 
 from src.avail_descriptors import AVAIL_DESCRIPTORS
 
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 rootutils.setup_root(os.path.abspath('./'), indicator=".project-root", pythonpath=True, dotenv=True, cwd=True)
 tqdm.pandas()
