@@ -17,7 +17,7 @@ from sklearn.preprocessing import normalize
 
 from src.avail_descriptors import AVAIL_DESCRIPTORS
 
-from tqdm.auto import tqdm
+from tqdm import tqdm
 
 rootutils.setup_root(os.path.abspath('./'), indicator=".project-root", pythonpath=True, dotenv=True, cwd=True)
 tqdm.pandas()
@@ -39,14 +39,11 @@ def compute_descriptors(smiles, descriptors):
 
     X = []
     for desc_name in descriptors:
-        try:
-            X.append(AVAIL_DESCRIPTORS[desc_name](mol))
-        except:
-            X.append(None)
+        X.append(AVAIL_DESCRIPTORS[desc_name](mol))
     
     return pd.Series(X)
     
-def create_data(df, descriptors: list, create_fingerprints=True, apply_norm=False, radius=2, nbits=2048, fingerprints_pca=True, pca_dim=32) -> tuple:
+def create_data(df, descriptors: list, create_fingerprints=True, apply_norm=False, radius=2, nbits=2048, fingerprints_pca=True, pca_dim=32, temp_column=False) -> tuple:
     '''
     Arguments:
     -------
@@ -64,6 +61,8 @@ def create_data(df, descriptors: list, create_fingerprints=True, apply_norm=Fals
     '''
     smiles = df['smiles']
     y = df['label'].values
+    if temp_column:
+        temp = df['T'].values
 
     if create_fingerprints:
         df['fingerprints'] = smiles.apply(compute_fingerprints, args=(radius, nbits,))
@@ -79,9 +78,12 @@ def create_data(df, descriptors: list, create_fingerprints=True, apply_norm=Fals
     X_at = np.array(X_at)
 
     if apply_norm:
-        X_fps = normalize(X_fps)
+        if create_fingerprints:
+            X_fps = normalize(X_fps)
         X_at = normalize(X_at)
 
+    if temp_column:
+        return X_fps, X_at, y, temp
     return X_fps, X_at, y
 
 def eval_metrics(y_true, y_pred, type="classification"):

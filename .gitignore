@@ -3,3 +3,6 @@ catboost_info
 lightning_logs
 
 __pycache__
+
+checkpoints
+tb_logs
