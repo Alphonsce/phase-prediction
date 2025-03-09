@@ -1,19 +1,26 @@
-import pandas as pd
-import numpy as np
-import rdkit
+import os
+
 import matplotlib.pyplot as plt
-
+import numpy as np
+import pandas as pd
+import rdkit
+import rootutils
 from rdkit import Chem
-from rdkit.Chem import rdMolDescriptors, Descriptors, Lipinski
-from rdkit.Chem import AllChem
-from rdkit.Chem import rdFingerprintGenerator
-
-from sklearn.preprocessing import normalize
+from rdkit.Chem import (AllChem, Descriptors, Fragments, Lipinski,
+                        rdFingerprintGenerator, rdMolDescriptors)
 from sklearn.decomposition import PCA
-
+from sklearn.metrics import (accuracy_score, balanced_accuracy_score,
+                             mean_absolute_error, mean_squared_error, r2_score,
+                             roc_auc_score)
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, roc_auc_score, r2_score, balanced_accuracy_score
-from sklearn.metrics import mean_absolute_error, mean_squared_error, root_mean_squared_error
+from sklearn.preprocessing import normalize
+
+from src.avail_descriptors import AVAIL_DESCRIPTORS
+
+from tqdm.auto import tqdm
+
+rootutils.setup_root(os.path.abspath('./'), indicator=".project-root", pythonpath=True, dotenv=True, cwd=True)
+tqdm.pandas()
 
 def create_df(data_path, columns) -> pd.DataFrame:
     df = pd.read_csv(data_path, sep=' ', header=None, names=columns)
@@ -27,34 +34,15 @@ def compute_fingerprints(smiles, radius, nbits):
 
 def compute_descriptors(smiles, descriptors):
     mol = Chem.MolFromSmiles(smiles)
-
-    avail_descriptors = {
-        'MolWt': lambda mol: Descriptors.MolWt(mol),
-        'LogP': lambda mol: Descriptors.MolLogP(mol),
-        'TPSA': lambda mol: Descriptors.TPSA(mol),
-        'NumRotatableBonds': lambda mol: Descriptors.NumRotatableBonds(mol),
-        'NumHDonors': lambda mol: Descriptors.NumHDonors(mol),
-        'NumHAcceptors': lambda mol: Descriptors.NumHAcceptors(mol),
-        'FractionCSP3': lambda mol: Lipinski.FractionCSP3(mol),
-        'NumAromaticRings': lambda mol: Descriptors.NumAromaticRings(mol),
-        'FractionRotatableBonds': lambda mol: rdMolDescriptors.CalcFractionCSP3(mol),
-
-        # ----------
-        'NumHBD': lambda mol: rdMolDescriptors.CalcNumHBD(mol),
-        "NumHeavyAtoms": lambda mol: rdMolDescriptors.CalcNumHeavyAtoms(mol),
-        # ----------
-        
-        'NumHBA': lambda mol: rdMolDescriptors.CalcNumHBA(mol),
-        'NumRings': lambda mol: rdMolDescriptors.CalcNumRings(mol),
-        'NumHeteroatoms': lambda mol: rdMolDescriptors.CalcNumHeteroatoms(mol),
-        'Chi0v': lambda mol: rdMolDescriptors.CalcChi0v(mol),
-        'Chi1v': lambda mol: rdMolDescriptors.CalcChi1v(mol),
-        'Chi2v': lambda mol: rdMolDescriptors.CalcChi2v(mol),
-    }
+    mol = Chem.AddHs(mol)          # Add hydrogens
+    AllChem.EmbedMolecule(mol)      # Generate a 3D conformer
 
     X = []
     for desc_name in descriptors:
-        X.append(avail_descriptors[desc_name](mol))
+        try:
+            X.append(AVAIL_DESCRIPTORS[desc_name](mol))
+        except:
+            X.append(None)
     
     return pd.Series(X)
     
@@ -87,7 +75,7 @@ def create_data(df, descriptors: list, create_fingerprints=True, apply_norm=Fals
     else:
         X_fps = None
 
-    X_at = smiles.apply(compute_descriptors, args=(descriptors,))
+    X_at = smiles.progress_apply(compute_descriptors, args=(descriptors,))
     X_at = np.array(X_at)
 
     if apply_norm:
@@ -106,7 +94,6 @@ def eval_metrics(y_true, y_pred, type="classification"):
         }
     return {
         "MSE": mean_squared_error(y_true, y_pred),
-        "RMSE": root_mean_squared_error(y_true, y_pred),
         "MAE": mean_absolute_error(y_true, y_pred),
         "R2": r2_score(y_true, y_pred)
     }
