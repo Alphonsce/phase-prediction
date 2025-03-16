@@ -52,6 +52,7 @@ class MultiTaskModel(LightningModule):
         drop=0.2,
         lr=1e-3,
         cl_loss_coef=1,
+        pos_label_weight=100,
         reg_loss_coef=1,
     ):
         super().__init__()
@@ -60,6 +61,7 @@ class MultiTaskModel(LightningModule):
         self.cl_loss_coef = cl_loss_coef
         self.reg_loss_coef = reg_loss_coef
         self.use_residual = use_residual
+        self.pos_label_weight = pos_label_weight
 
         self.save_hyperparameters()
 
@@ -125,7 +127,7 @@ class MultiTaskModel(LightningModule):
 
         logits, temp_pred = self(x)
 
-        classification_loss = F.binary_cross_entropy_with_logits(logits, labels.unsqueeze(1).float())
+        classification_loss = F.binary_cross_entropy_with_logits(logits, labels.unsqueeze(1).float(), pos_weight=torch.tensor([self.pos_label_weight]))
         regression_loss = self.compute_masked_regression_loss(temp_pred, temp_true)
 
         loss = self.cl_loss_coef * classification_loss + self.reg_loss_coef * regression_loss
@@ -140,7 +142,7 @@ class MultiTaskModel(LightningModule):
 
         logits, temp_pred = self(x)
 
-        classification_loss = F.binary_cross_entropy_with_logits(logits, labels.unsqueeze(1).float())
+        classification_loss = F.binary_cross_entropy_with_logits(logits, labels.unsqueeze(1).float(), pos_weight=torch.tensor([self.pos_label_weight]))
         regression_loss = self.compute_masked_regression_loss(temp_pred, temp_true)
 
         loss = self.cl_loss_coef * classification_loss + self.reg_loss_coef * regression_loss
