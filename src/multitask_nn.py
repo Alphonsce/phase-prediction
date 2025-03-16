@@ -13,15 +13,43 @@ from torchmetrics import R2Score, MeanSquaredError, MeanAbsoluteError
 
 from torch.utils.data import TensorDataset
 
+class MLPBlock(nn.Module):
+    def __init__(self, input_dim, output_dim, drop=0.2):
+        super().__init__()
+        self.block = nn.ModuleList([
+            nn.Linear(input_dim, output_dim),
+            nn.BatchNorm1d(output_dim),
+            nn.ReLU(),
+            nn.Dropout(drop)
+        ])
+        
+    def forward(self, x):
+        for layer in self.block:
+            x = layer(x)
+        return x
+
+class ResidualBlock(nn.Module):
+    def __init__(self, block: nn.ModuleList):
+        super().__init__()
+        self.block = block
+        
+    def forward(self, x):
+        return x + self.forward_block(x)
+        
+    def forward_block(self, x):
+        for layer in self.block:
+            x = layer(x)
+        return x
 
 class MultiTaskModel(LightningModule):
     def __init__(
         self,
         input_dim,
         hidden_dim=256,
+        depth=3,
+        use_residual=False,
         drop=0.2,
         lr=1e-3,
-
         cl_loss_coef=1,
         reg_loss_coef=1,
     ):
@@ -30,23 +58,27 @@ class MultiTaskModel(LightningModule):
         self.lr = lr
         self.cl_loss_coef = cl_loss_coef
         self.reg_loss_coef = reg_loss_coef
+        self.use_residual = use_residual
 
         self.save_hyperparameters()
 
-        self.shared = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
-            nn.BatchNorm1d(hidden_dim),
-            nn.ReLU(),
-            nn.Dropout(drop),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.BatchNorm1d(hidden_dim),
-            nn.ReLU(),
-            nn.Dropout(drop),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.BatchNorm1d(hidden_dim),
-            nn.ReLU()
-        )
-
+        # Build shared network with configurable depth
+        shared_layers = []
+        shared_layers.append(MLPBlock(input_dim, hidden_dim, drop))
+        
+        for _ in range(depth - 1):
+            if use_residual:
+                block = nn.ModuleList([
+                    nn.Linear(hidden_dim, hidden_dim),
+                    nn.BatchNorm1d(hidden_dim),
+                    nn.ReLU(),
+                    nn.Dropout(drop)
+                ])
+                shared_layers.append(ResidualBlock(block))
+            else:
+                shared_layers.append(MLPBlock(hidden_dim, hidden_dim, drop))
+            
+        self.shared = nn.Sequential(*shared_layers)
 
         self.classifier = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
