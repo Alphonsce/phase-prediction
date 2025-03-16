@@ -106,3 +106,124 @@ AVAIL_DESCRIPTORS = {
     'Chi3v': lambda mol: rdMolDescriptors.CalcChi3v(mol),
     'Chi4v': lambda mol: rdMolDescriptors.CalcChi4v(mol)
 }
+
+descriptors_all = [
+    "MolWt",
+    "LogP",
+    "TPSA",
+    "NumRotatableBonds",
+    "NumHDonors",
+    "NumHAcceptors",
+    "FractionCSP3",
+    "NumAromaticRings",
+    "FractionRotatableBonds",
+    "CalcNumAmideBonds",
+    "rdMolDescriptors.CalcNumBridgeheadAtoms",
+    "rdMolDescriptors.CalcNumSaturatedRings",
+    "fr_Al_COO",
+    "fr_Al_OH",
+    "fr_Al_OH_noTert",
+    "fr_ArN",
+    "fr_Ar_COO",
+    "fr_Ar_N",
+    "fr_Ar_NH",
+    "fr_Ar_OH",
+    "fr_COO",
+    "fr_C_O",
+    "fr_C_O_noCOO",
+    "fr_C_S",
+    "fr_HOCCN",
+    "fr_Imine",
+    "fr_NH0",
+    "fr_NH1",
+    "fr_NH2",
+    "fr_N_O",
+    "fr_Ndealkylation1",
+    "fr_Ndealkylation2",
+    "fr_Nhpyrrole",
+    "fr_SH",
+    "fr_aldehyde",
+    "fr_alkyl_carbamate",
+    "fr_alkyl_halide",
+    "fr_allylic_oxid",
+    "fr_amide",
+    "fr_amidine",
+    "fr_aniline",
+    "fr_aryl_methyl",
+    "fr_azide",
+    "fr_azo",
+    "fr_barbitur",
+    "fr_benzene",
+    "fr_benzodiazepine",
+    "fr_bicyclic",
+    "fr_diazo",
+    "fr_dihydropyridine",
+    "fr_epoxide",
+    "fr_ester",
+    "fr_ether",
+    "fr_furan",
+    "fr_guanido",
+    "fr_halogen",
+    "fr_hdrzine",
+    "fr_hdrzone",
+    "fr_imidazole",
+    "fr_imide",
+    "fr_isocyan",
+    "fr_isothiocyan",
+    "fr_ketone",
+    "fr_ketone_Topliss",
+    "fr_lactam",
+    "fr_lactone",
+    "fr_methoxy",
+    "fr_morpholine",
+    "fr_nitrile",
+    "fr_nitro",
+    "fr_nitro_arom_nonortho",
+    "fr_nitroso",
+    "fr_oxazole",
+    "fr_oxime",
+    "fr_para_hydroxylation",
+    "fr_phenol",
+    "fr_phenol_noOrthoHbond",
+    "fr_phos_acid",
+    "fr_phos_ester",
+    "fr_piperdine",
+    "fr_piperzine",
+    "fr_priamide",
+    # "rdMolDescriptors.CalcEccentricity",
+    # "rdMolDescriptors.CalcPBF",
+    # "rdMolDescriptors.CalcSpherocityIndex",
+    # "rdMolDescriptors.CalcRadiusOfGyration",
+    "NumHBD",
+    "NumHeavyAtoms",
+    "NumHBA",
+    "NumRings",
+    "NumHeteroatoms",
+    "Chi0v",
+    "Chi1v",
+    "Chi2v",
+    "Chi3v",
+    "Chi4v"
+]
+
+descriptors_short = [
+    "NumHBD",                # Number of Hydrogen Bond Donors (rdMolDescriptors)
+    "NumHeavyAtoms",         # Number of Heavy Atoms
+
+    'MolWt',                 # Molecular Weight
+    'LogP',                  # LogP (octanol-water partition coefficient)
+    'TPSA',                  # Topological Polar Surface Area
+    'NumRotatableBonds',     # Number of Rotatable Bonds
+    'NumHDonors',            # Number of Hydrogen Bond Donors
+    'NumHAcceptors',         # Number of Hydrogen Bond Acceptors
+    'FractionCSP3',          # Fraction of sp3 Hybridized Carbons
+    'NumAromaticRings',      # Number of Aromatic Rings
+    'FractionRotatableBonds',# Fraction of Rotatable Bonds
+    'NumHBD',               
+    'NumHBA',                # Number of Hydrogen Bond Acceptors (rdMolDescriptors)
+    'NumRings',              # Number of Rings
+    'NumHeteroatoms',        # Number of Heteroatoms
+    'Chi0v',                 # Chi Connectivity Index 0 (Valence)
+    'Chi1v',                 # Chi Connectivity Index 1 (Valence)
+    'Chi2v',                 # Chi Connectivity Index 2 (Valence)
+]
