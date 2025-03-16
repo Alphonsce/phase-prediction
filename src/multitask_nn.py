@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 from lightning import LightningModule, Trainer
 
@@ -105,15 +106,27 @@ class MultiTaskModel(LightningModule):
         shared_out = self.shared(x)
         class_logits = self.classifier(shared_out)
         reg_output = self.regressor(shared_out)
+
         return class_logits, reg_output
+    
+    def compute_masked_regression_loss(self, temp_pred, temp_true):
+        '''
+        Computes the regression loss only for samples with not NaN Temperatures.
+        '''
+        mask = ~torch.isnan(temp_true)
+        if mask.sum() > 0:
+            valid_pred_temp = temp_pred[mask.unsqueeze(1)].squeeze()
+            valid_temp = temp_true[mask]
+            return F.mse_loss(valid_pred_temp, valid_temp)
+        return torch.tensor(0.0, device=self.device)
 
     def training_step(self, batch, batch_idx):
-        x, labels, temp = batch
+        x, labels, temp_true = batch
 
-        logits, predictions = self(x)
+        logits, temp_pred = self(x)
 
         classification_loss = F.binary_cross_entropy_with_logits(logits, labels.unsqueeze(1).float())
-        regression_loss = F.mse_loss(predictions, temp.unsqueeze(1).float())
+        regression_loss = self.compute_masked_regression_loss(temp_pred, temp_true)
 
         loss = self.cl_loss_coef * classification_loss + self.reg_loss_coef * regression_loss
 
@@ -123,12 +136,12 @@ class MultiTaskModel(LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        x, labels, temp = batch
+        x, labels, temp_true = batch
 
-        logits, predictions = self(x)
+        logits, temp_pred = self(x)
 
         classification_loss = F.binary_cross_entropy_with_logits(logits, labels.unsqueeze(1).float())
-        regression_loss = F.mse_loss(predictions, temp.unsqueeze(1).float())
+        regression_loss = self.compute_masked_regression_loss(temp_pred, temp_true)
 
         loss = self.cl_loss_coef * classification_loss + self.reg_loss_coef * regression_loss
 
@@ -143,16 +156,22 @@ class MultiTaskModel(LightningModule):
         self.val_roc_auc(probs, labels_long)
         self.val_r2_class(probs, labels.float())
 
-        self.val_mse(predictions.squeeze(), temp)
-        self.val_mae(predictions.squeeze(), temp)
-        self.val_r2_reg(predictions.squeeze(), temp)
+        mask = ~torch.isnan(temp_true)
+        if mask.sum() > 0:
+            self.val_mse(temp_pred.squeeze()[mask], temp_true[mask])
+            self.val_mae(temp_pred.squeeze()[mask], temp_true[mask])
+            self.val_r2_reg(temp_pred.squeeze()[mask], temp_true[mask])
+        else:
+            self.log("metrics/regression/mse", float('nan'))
+            self.log("metrics/regression/mae", float('nan'))
+            self.log("metrics/regression/r2_reg", float('nan'))
 
         return loss
 
     def on_validation_epoch_end(self):
         # Classification:
-        self.log("metrics/classification/acc", self.val_accuracy.compute(), prog_bar=True)
-        self.log("metrics/classification/f1_macro", self.val_f1.compute())
+        self.log("metrics/classification/acc", self.val_accuracy.compute())
+        self.log("metrics/classification/f1", self.val_f1.compute(), prog_bar=True)
         self.log("metrics/classification/roc_auc", self.val_roc_auc.compute())
         self.log("metrics/classification/r2_class", self.val_r2_class.compute())
         # Regression:
@@ -173,11 +192,15 @@ class MultiTaskModel(LightningModule):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
         return optimizer
 
-def create_datasets(X, labels, temp, train_size=0.8) -> Tuple[TensorDataset]:
-    dataset_components = train_test_split(X, labels, temp, train_size=train_size)
-
-    # np.ndarray -> torch.tensor:
-    X_train, X_val, y_train, y_val, temp_train, temp_val = list(map(lambda x: torch.tensor(x, dtype=torch.float32), dataset_components))
+def create_datasets(X, labels, temp, train_size=0.8, use_norm=False) -> Tuple[TensorDataset]:
+    X_train, X_val, y_train, y_val, temp_train, temp_val = train_test_split(X, labels, temp, train_size=train_size)
+    
+    if use_norm:
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_val = scaler.transform(X_val)
+    
+    X_train, X_val, y_train, y_val, temp_train, temp_val = list(map(lambda x: torch.tensor(x, dtype=torch.float32), [X_train, X_val, y_train, y_val, temp_train, temp_val]))
     
     train_data = TensorDataset(X_train, y_train, temp_train)
     val_data = TensorDataset(X_val, y_val, temp_val)
