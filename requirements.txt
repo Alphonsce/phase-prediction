@@ -11,3 +11,6 @@ pandas
 lightning
 catboost
 scikit-learn
+
+# SMOTE:
+imbalanced-learn

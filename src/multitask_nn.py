@@ -119,7 +119,7 @@ class MultiTaskModel(LightningModule):
         if mask.sum() > 0:
             valid_pred_temp = temp_pred[mask.unsqueeze(1)].squeeze()
             valid_temp = temp_true[mask]
-            return F.mse_loss(valid_pred_temp, valid_temp)
+            return F.mse_loss(valid_pred_temp, valid_temp.squeeze())
         return torch.tensor(0.0, device=self.device)
 
     def training_step(self, batch, batch_idx):
@@ -177,9 +177,11 @@ class MultiTaskModel(LightningModule):
         self.log("metrics/classification/roc_auc", self.val_roc_auc.compute())
         self.log("metrics/classification/r2_class", self.val_r2_class.compute())
         # Regression:
-        self.log("metrics/regression/mse", self.val_mse.compute())
-        self.log("metrics/regression/mae", self.val_mae.compute(), prog_bar=True)
-        self.log("metrics/regression/r2_reg", self.val_r2_reg.compute())
+        mse = self.val_mse.compute()
+        self.log("metrics/regression/mse", mse)
+        self.log("metrics/regression/mae", self.val_mae.compute())
+        self.log("metrics/regression/rmse", torch.sqrt(mse), prog_bar=True)
+        self.log("metrics/regression/r2_reg", self.val_r2_reg.compute(), prog_bar=True)
 
         self.val_accuracy.reset()
         self.val_f1.reset()
