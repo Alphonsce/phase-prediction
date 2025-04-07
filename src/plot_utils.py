@@ -22,7 +22,7 @@ def plot_T_from_distance_for_nn(model, val_loader, threshold=0.5, figsize=(8, 5)
     plt.figure(figsize=figsize)
     
     # Colors and linear regression for each class
-    for name, cls, color in [('Liquid', 0, 'blue'), ('Solid', 1, 'red')]:
+    for name, cls, color in [('Liquid', 0, 'blue'), ('Solid', 1, 'green')]:
         mask = pred_classes == cls
         
         # Plot scatter points
@@ -30,7 +30,7 @@ def plot_T_from_distance_for_nn(model, val_loader, threshold=0.5, figsize=(8, 5)
             result_logits[mask], result_reg[mask], 
             c=color, 
             label=name,
-            alpha=0.7
+            alpha=0.4
         )
         
         # Perform linear regression for this class
@@ -44,6 +44,36 @@ def plot_T_from_distance_for_nn(model, val_loader, threshold=0.5, figsize=(8, 5)
             plt.plot(x_range, slope * x_range + intercept, 
                      color=color, linestyle='--', 
                      label=f'{name} fit: {slope:.2f}x + {intercept:.2f}')
+            
+    plt.ylabel('Temperature, C')
+    plt.xlabel('Distance to separating plane')
+    plt.grid(alpha=0.3)
+    
+    plt.legend()
+    plt.show()
+
+def plot_T_from_distance_for_catboost(temp, dist, threshold=0.5, figsize=(8, 5)):
+
+    # Apply sigmoid to get probabilities
+    probs = 1 / (1 + np.exp(-dist))
+    # Get predicted classes (1 if prob > 0.5, else 0)
+    pred_classes = (probs > threshold).astype(int)
+
+    # Plot with different colors for each class
+    plt.figure(figsize=figsize)
+    
+    # Colors and linear regression for each class
+    for name, cls, color in [('Liquid', 0, 'blue'), ('Solid', 1, 'green')]:
+        mask = pred_classes == cls
+        mask = mask.squeeze()
+        
+        # Plot scatter points
+        plt.scatter(
+            dist[mask], temp[mask], 
+            c=color, 
+            label=name,
+            alpha=0.4
+        )
             
     plt.ylabel('Temperature, C')
     plt.xlabel('Distance to separating plane')
