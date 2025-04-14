@@ -19,6 +19,8 @@ from src.avail_descriptors import AVAIL_DESCRIPTORS
 
 from tqdm.auto import tqdm
 
+from imblearn.over_sampling import SMOTE
+
 rootutils.setup_root(os.path.abspath('./'), indicator=".project-root", pythonpath=True, dotenv=True, cwd=True)
 tqdm.pandas()
 
@@ -137,6 +139,13 @@ def eval_metrics(y_true, y_pred, type="classification"):
         "MAE": mean_absolute_error(y_true, y_pred),
         "R2": r2_score(y_true, y_pred)
     }
+
+def perform_smote(X, labels, temp, k_neighbors=10, random_state=42):
+    smote = SMOTE(random_state=random_state, k_neighbors=k_neighbors)
+    X_resampled, labels_resampled = smote.fit_resample(X, labels)
+    temp_resampled = np.concatenate([temp, np.array([np.nan] * (X_resampled.shape[0] - X.shape[0]))])
+
+    return X_resampled, labels_resampled, temp_resampled
 
 def plot_pred_true(pred, true):
     plt.figure(figsize=(6, 4))
