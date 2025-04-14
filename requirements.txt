@@ -1,7 +1,11 @@
 jupyter
+rootutils
 
 # Chemical-Stuff for Chem-Features Computation:
 rdkit
+pubchempy
+pymatgen
+PyCifRW
 
 # Working with Data:
 matplotlib
@@ -12,5 +16,13 @@ lightning
 catboost
 scikit-learn
 
+# Logging:
+tensorboard
+tensorboardX
+
 # SMOTE:
 imbalanced-learn
+
+# Parsing COD web:
+requests
+beautifulsoup4

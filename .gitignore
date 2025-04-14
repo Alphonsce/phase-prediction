@@ -9,3 +9,6 @@ tb_logs
 saved_np_obj
 
 error_smiles.txt
+
+cif
+*.cif
