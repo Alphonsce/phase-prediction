@@ -28,3 +28,13 @@ h_bond_donors= Chem.rdMolDescriptors.CalcNumHBD(m) # считаем число �
  rdkit.Chem.rdMolDescriptors.CalcNumHeavyAtoms((Mol)mol) → int 
     returns the number of heavy atoms for a molecule
 ```
+
+---
+
+## COD database:
+
+Что сработало для скачки через rsync:
+
+```
+rsync -avz --timeout=60 --partial --progress --delete rsync://www.crystallography.net/cif/ cif/
+```

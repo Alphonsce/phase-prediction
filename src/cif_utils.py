@@ -58,4 +58,4 @@ def get_smiles_from_id_on_web(cod_id: str) -> str:
                 if data:
                     return data.text.strip()
     
-    raise Exception("SMILES string not found.")
+    raise Exception(f"SMILES string not found for {cod_id}")
