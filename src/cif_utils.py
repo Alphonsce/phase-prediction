@@ -48,26 +48,34 @@ def get_smiles_from_id_on_web(cod_id: str) -> str:
     """
     Get the SMILES string and common name for a given COD ID from the COD web page.
     """
-    url = f"https://qiserver.ugr.es/cod/{cod_id}.html"
+    url = f"http://www.crystallography.net/cod/{cod_id}.html"
     headers = {
         "User-Agent": random.choice(USER_AGENTS),
         "Accept-Language": "en-US,en;q=0.9",
-        "Referer": "https://qiserver.ugr.es/",
+        "Referer": "http://www.crystallography.net/",
         "DNT": "1",
         "Connection": "keep-alive"
     }
 
     try:
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=2)
         response.raise_for_status()
     except Exception as e:
-        raise Exception(f"Failed to fetch page: {url} with error: {e}")
+        # Try the alternative URL if the first one fails
+        try:
+            alt_url = f"https://qiserver.ugr.es/cod/{cod_id}.html"
+            headers["Referer"] = "https://qiserver.ugr.es/"
+            response = requests.get(alt_url, headers=headers, timeout=2)
+            response.raise_for_status()
+        except Exception as e2:
+            raise Exception(f"Failed to fetch page: {url} and {alt_url} with errors: {e}, {e2}")
 
     soup = BeautifulSoup(response.text, 'html.parser')
     tables = soup.find_all('table')
     
     smiles = None
     common_name = None
+    chemical_name = None
 
     for table in tables:
         for row in table.find_all('tr'):
@@ -79,6 +87,8 @@ def get_smiles_from_id_on_web(cod_id: str) -> str:
                 smiles = data.text.strip()
             elif 'Common name' in header.text:
                 common_name = data.text.strip()
+            elif 'Chemical name' in header.text:
+                chemical_name = data.text.strip()
     
-    return smiles, common_name
+    return smiles, common_name, chemical_name
 

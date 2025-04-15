@@ -34,23 +34,28 @@ if __name__ == "__main__":
     if os.path.exists(csv_path):
         results_df = pd.read_csv(csv_path)
     else:
-        results_df = pd.DataFrame(columns=["id", "smiles", "common_name"])
+        results_df = pd.DataFrame(columns=["id", "smiles", "common_name", "chemical_name"])
 
     for i, id in tqdm(enumerate(cifs_id), total=len(cifs_id)):
-        if id in results_df['id'].values:
+        if int(id) in results_df['id'].values:
             continue
 
         try:
-            smiles, common_name = get_smiles_from_id_on_web(id)
+            smiles, common_name, chemical_name = get_smiles_from_id_on_web(id)
             if smiles is None and common_name is not None:
                 try:
                     smiles = get_smiles_from_chemical_name(common_name)
                     print(f"Successfully got smiles from name for {id}")
                 except Exception as e:
-                    print(f"Failed to get smiles from name for {id}: {e}")
-                    continue
+                    if chemical_name is not None:
+                        try:
+                            smiles = get_smiles_from_chemical_name(chemical_name)
+                            print(f"Successfully got smiles from name for {id}")
+                        except Exception as e:
+                            print(f"Failed to get smiles from name for {id}: {e}")
+                            continue
                 
-            new_row = pd.DataFrame({"id": [id], "smiles": [smiles], "common_name": [common_name]})
+            new_row = pd.DataFrame({"id": [id], "smiles": [smiles], "common_name": [common_name], "chemical_name": [chemical_name]})
             results_df = pd.concat([results_df, new_row], ignore_index=True)
             results_df.to_csv(csv_path, index=False)
             time.sleep(random.uniform(0.2, 0.5))  # Random sleep between 0.5 and 2.5 seconds
