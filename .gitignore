@@ -12,3 +12,7 @@ error_smiles.txt
 
 cif
 *.cif
+
+temp*.parquet
+
+cod_parsed.csv
