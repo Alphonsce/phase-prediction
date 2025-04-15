@@ -5,6 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 import requests
 
+import numpy as np
 import os
 import rootutils
 
@@ -20,9 +21,14 @@ USER_AGENTS = [
 ]
 
 if __name__ == "__main__":
-    cifs_path = "/Users/aleksandr.varlamov/cif/all_cifs"
-    cifs = sorted(os.listdir(cifs_path))
-    cifs_id = list(map(lambda x: x.split(".")[0], cifs))
+    ## Loading all ids:
+    try:
+        cifs_path = "/Users/aleksandr.varlamov/cif/all_cifs"
+        cifs = sorted(os.listdir(cifs_path))
+        cifs_id = list(map(lambda x: x.split(".")[0], cifs))
+    except:
+        cifs_id = np.load("cifs_id.npy").tolist()
+    
     csv_path = "cod_parsed.csv"
 
     if os.path.exists(csv_path):
