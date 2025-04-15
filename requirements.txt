@@ -26,3 +26,7 @@ imbalanced-learn
 # Parsing COD web:
 requests
 beautifulsoup4
+
+# Working with HF:
+datasets
+huggingface-hub
