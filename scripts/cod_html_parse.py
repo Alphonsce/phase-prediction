@@ -58,7 +58,7 @@ if __name__ == "__main__":
             new_row = pd.DataFrame({"id": [id], "smiles": [smiles], "common_name": [common_name], "chemical_name": [chemical_name]})
             results_df = pd.concat([results_df, new_row], ignore_index=True)
             results_df.to_csv(csv_path, index=False)
-            time.sleep(random.uniform(0.2, 0.5))  # Random sleep between 0.5 and 2.5 seconds
+            time.sleep(random.uniform(0.1, 0.2))  # Random sleep between 0.5 and 2.5 seconds
 
         except Exception as e:
             print(f"Failed for {id}: {e}")

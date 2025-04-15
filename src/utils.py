@@ -43,7 +43,7 @@ def compute_descriptors(smiles, descriptors):
     try:
         mol = Chem.MolFromSmiles(smiles)
         mol = Chem.AddHs(mol)          # Add hydrogens
-        # AllChem.EmbedMolecule(mol)      # Generate a 3D conformer, takes too long, sometimes failes for no reason
+        AllChem.EmbedMolecule(mol)      # Generate a 3D conformer, takes too long, sometimes failes for no reason
 
         X = []
         for desc_name in descriptors:

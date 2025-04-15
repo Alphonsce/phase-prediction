@@ -190,10 +190,14 @@ descriptors_all = [
     "fr_piperdine",
     "fr_piperzine",
     "fr_priamide",
-    # "rdMolDescriptors.CalcEccentricity",
-    # "rdMolDescriptors.CalcPBF",
-    # "rdMolDescriptors.CalcSpherocityIndex",
-    # "rdMolDescriptors.CalcRadiusOfGyration",
+    
+    ### -----------BROKEN:----------------
+    "rdMolDescriptors.CalcEccentricity",
+    "rdMolDescriptors.CalcPBF",
+    "rdMolDescriptors.CalcSpherocityIndex",
+    "rdMolDescriptors.CalcRadiusOfGyration",
+    ### --------------------------
+    
     "NumHBD",
     "NumHeavyAtoms",
     "NumHBA",
