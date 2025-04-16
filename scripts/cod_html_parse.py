@@ -36,7 +36,7 @@ if __name__ == "__main__":
     else:
         results_df = pd.DataFrame(columns=["id", "smiles", "common_name", "chemical_name"])
 
-    for i, id in tqdm(enumerate(cifs_id), total=len(cifs_id)):
+    for i, id in tqdm(enumerate(cifs_id[::-1]), total=len(cifs_id)):
         if int(id) in results_df['id'].values:
             continue
 
@@ -53,7 +53,6 @@ if __name__ == "__main__":
                             print(f"Successfully got smiles from name for {id}")
                         except Exception as e:
                             print(f"Failed to get smiles from name for {id}: {e}")
-                            continue
                 
             new_row = pd.DataFrame({"id": [id], "smiles": [smiles], "common_name": [common_name], "chemical_name": [chemical_name]})
             results_df = pd.concat([results_df, new_row], ignore_index=True)
