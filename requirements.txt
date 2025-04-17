@@ -1,11 +1,12 @@
 jupyter
 rootutils
 
-# Chemical-Stuff for Chem-Features Computation:
+# Chemical-Stuff for Chem-Features Computation and CIF reading:
 rdkit
 pubchempy
 pymatgen
 PyCifRW
+nglview
 
 # Working with Data:
 matplotlib

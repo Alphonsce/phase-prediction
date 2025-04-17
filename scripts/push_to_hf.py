@@ -24,7 +24,7 @@ def generate_examples(data_dir):
                 print(f"Error processing {filename}: {str(e)}")
                 continue
 
-def create_and_push_dataset(repo_name, data_dir, batch_size=1000):
+def create_and_push_dataset(repo_name, data_dir, batch_size=1000, start_from=0):
     login(token=TOKEN)
     features = Features({
         "file_name": Value("string"),
@@ -35,6 +35,10 @@ def create_and_push_dataset(repo_name, data_dir, batch_size=1000):
     batch = []
     shard_num = 0
     for example in tqdm(generate_examples(data_dir), total=len(os.listdir(data_dir)), desc="Uploading to HF..."):
+        if shard_num < start_from:
+            print(f"Skipping shard {shard_num} because it is less than {start_from}")
+            shard_num += 1
+            continue
         batch.append(example)
         if len(batch) == batch_size:
             # Create dataset from the current batch
@@ -85,4 +89,14 @@ def create_and_push_dataset(repo_name, data_dir, batch_size=1000):
 if __name__ == "__main__":
     all_cifs_path = "/Users/aleksandr.varlamov/cif/all_cifs"
     
-    create_and_push_dataset("Alphonsce/cif-dataset", all_cifs_path, batch_size=1000)  
+    # start_from = 115        # First Fail was on 115 with batch_size 1000
+    
+    # start_from = 179
+    
+    # start_from = 241
+    
+    # start_from = 368
+    
+    start_from = 493
+    
+    create_and_push_dataset("Alphonsce/cif-dataset", all_cifs_path, batch_size=1000, start_from=start_from)  

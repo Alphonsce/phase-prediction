@@ -1,4 +1,4 @@
-from CifFile import ReadCif
+from pymatgen.io.cif import CifParser, CifFile, CifBlock
 import json
 import pubchempy as pcp
 from rdkit import Chem
@@ -35,14 +35,6 @@ def get_smiles_from_chemical_name(chemical_name: str) -> str:
         return smiles
     else:
         raise ValueError(f"Compound not found: {chemical_name}")
-    
-def read_cif(file_path: str) -> dict:
-    """
-    Read a .cif file and return a dict with all fields
-    """
-    cf = ReadCif(file_path)
-    block = cf.first_block()
-    return {key: block[key] for key in block.keys()}
 
 def get_smiles_from_id_on_web(cod_id: str) -> str:
     """
@@ -82,3 +74,15 @@ def get_smiles_from_id_on_web(cod_id: str) -> str:
     
     return smiles, common_name
 
+def cif_from_file(file_path: str):
+    """
+    Read a .cif file and return a dict with all fields
+    """
+    parser = CifParser(file_path)
+    data_dict = list(parser.as_dict().values())[0]  # only data, no id
+    
+    return data_dict
+
+def dict_to_cif_block(dict_cif: dict, id: str) -> CifBlock:
+    block = CifBlock(dict_cif, loops=[], header=id)
+    return block
