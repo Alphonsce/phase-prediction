@@ -14,5 +14,3 @@ cif
 *.cif
 
 temp*.parquet
-
-cod_parsed.csv
