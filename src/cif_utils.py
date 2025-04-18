@@ -18,10 +18,14 @@ def get_canonical_smiles(row: pd.Series) -> pd.Series:
     """
     Get the canonical SMILES string for a row in a DataFrame
     """
-    mol = Chem.MolFromSmiles(row["smiles"])
-    canonical_smiles = Chem.MolToSmiles(mol, isomericSmiles=True, canonical=True)
-    row["can_smiles"] = canonical_smiles
-    return row
+    try:
+        mol = Chem.MolFromSmiles(row["smiles"])
+        canonical_smiles = Chem.MolToSmiles(mol, isomericSmiles=True, canonical=True)
+        row["can_smiles"] = canonical_smiles
+        return row
+    except Exception as e:
+        row["can_smiles"] = None
+        return row
 
 def get_smiles_from_chemical_name(chemical_name: str) -> str:
     """
