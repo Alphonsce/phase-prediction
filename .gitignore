@@ -10,7 +10,7 @@ saved_np_obj
 
 error_smiles.txt
 
-cif
+cifs
 *.cif
 
 temp*.parquet
