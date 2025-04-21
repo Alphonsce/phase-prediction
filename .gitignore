@@ -14,3 +14,7 @@ cifs
 *.cif
 
 temp*.parquet
+
+*.DS_Store
+
+__MACOSX
