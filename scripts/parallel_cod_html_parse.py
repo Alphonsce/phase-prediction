@@ -68,7 +68,7 @@ def process_id(cif_id):
 
 def get_args():
     parser = argparse.ArgumentParser(description='Parse COD HTML pages in parallel to extract chemical information')
-    parser.add_argument('--max-workers', type=int, default=4, help='Maximum number of worker threads (default: 4)')
+    parser.add_argument('--max-workers', type=int, default=16, help='Maximum number of worker threads (default: 4)')
     parser.add_argument('--csv-path', type=str, default="cod_parsed.csv", help='Path to the output CSV file (default: cod_parsed.csv)')
     parser.add_argument('--write-every', type=int, default=20, help='Write to CSV every N processed entries (default: 100)')
     args = parser.parse_args()
