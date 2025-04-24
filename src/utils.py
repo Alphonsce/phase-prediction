@@ -136,8 +136,9 @@ def eval_metrics(y_true, y_pred, type="classification"):
         }
     return {
         "MSE": mean_squared_error(y_true, y_pred),
+        "RMSE": np.sqrt(mean_squared_error(y_true, y_pred)).item(),
         "MAE": mean_absolute_error(y_true, y_pred),
-        "R2": r2_score(y_true, y_pred)
+        "R2": r2_score(y_true, y_pred),
     }
 
 def perform_smote(X, labels, temp, k_neighbors=10, random_state=42):
