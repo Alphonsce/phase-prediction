@@ -17,6 +17,9 @@ lightning
 catboost
 scikit-learn
 
+# Hyperparameter Optimization:
+optuna
+
 # Logging:
 tensorboard
 tensorboardX
