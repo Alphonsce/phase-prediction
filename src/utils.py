@@ -43,7 +43,7 @@ def compute_descriptors(smiles, descriptors):
     try:
         mol = Chem.MolFromSmiles(smiles)
         mol = Chem.AddHs(mol)          # Add hydrogens
-        # AllChem.EmbedMolecule(mol)      # Generate a 3D conformer, takes too long, sometimes failes for no reason
+        AllChem.EmbedMolecule(mol)      # Generate a 3D conformer, takes too long, sometimes failes for no reason
 
         X = []
         for desc_name in descriptors:
@@ -71,7 +71,12 @@ def create_data(df, descriptors: list, create_fingerprints=True, apply_norm=Fals
     X_at: non-fingerprint atomic features
     y: label
     '''
-    smiles = df['smiles']
+    
+    if "can_smiles" in df.columns:
+        smiles = df['can_smiles']
+    else:
+        smiles = df['smiles']
+        
     y = df['label'].values
  
     if temp_column:
@@ -97,7 +102,7 @@ def create_data(df, descriptors: list, create_fingerprints=True, apply_norm=Fals
 
     if temp_column:
         return X_fps, X_at, y, temp
-    return X_fps, X_at, y
+    return X_fps, X_at, y, np.array([1])
 
 def create_or_load_data(df, data_args, save_or_load_dir, load_data=True):
     if not os.path.exists(save_or_load_dir):

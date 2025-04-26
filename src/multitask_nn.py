@@ -242,6 +242,128 @@ class MultiTaskModel(LightningModule):
             }
         }
 
+class RegressionModel(LightningModule):
+    def __init__(
+        self,
+        input_dim,
+        hidden_dim=256,
+        depth=3,
+        use_residual=False,
+        drop=0.2,
+        lr=1e-3,
+        scheduler_gamma=1,
+        reg_loss_coef=1,
+        use_learnable_loss_weights=False,
+    ):
+        super().__init__()
+
+        # Store hyperparameters
+        self.lr = lr
+        self.scheduler_gamma = scheduler_gamma
+        self.reg_loss_coef = reg_loss_coef
+        self.use_residual = use_residual
+        self.use_learnable_loss_weights = use_learnable_loss_weights
+
+        self.save_hyperparameters()
+
+        # Build shared network
+        shared_layers = [MLPBlock(input_dim, hidden_dim, drop)]
+        for _ in range(depth - 1):
+            if use_residual:
+                block = nn.ModuleList([
+                    nn.Linear(hidden_dim, hidden_dim),
+                    nn.BatchNorm1d(hidden_dim),
+                    nn.ReLU(),
+                    nn.Dropout(drop)
+                ])
+                shared_layers.append(ResidualBlock(block))
+            else:
+                shared_layers.append(MLPBlock(hidden_dim, hidden_dim, drop))
+        self.shared = nn.Sequential(*shared_layers)
+
+        # Regression head
+        self.regressor = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, 1),
+        )
+
+        # Learnable loss weight
+        if self.use_learnable_loss_weights:
+            self.log_var_reg = nn.Parameter(torch.tensor(0.0))
+
+        # Metrics
+        self.val_mse = MeanSquaredError()
+        self.val_mae = MeanAbsoluteError()
+        self.val_r2 = R2Score()
+
+    def forward(self, x):
+        shared_out = self.shared(x)
+        reg_output = self.regressor(shared_out)
+        return reg_output
+    
+    def compute_masked_regression_loss(self, pred, target):
+        mask = ~torch.isnan(target)
+        if mask.sum() > 0:
+            valid_pred = pred.squeeze()[mask]
+            valid_target = target[mask]
+            return F.mse_loss(valid_pred, valid_target.squeeze())
+        return torch.tensor(0.0, device=self.device)
+
+    def training_step(self, batch, batch_idx):
+        x, temp_true = batch
+        temp_pred = self(x)
+
+        reg_loss = self.compute_masked_regression_loss(temp_pred, temp_true)
+        if self.use_learnable_loss_weights:
+            total_loss = torch.exp(-self.log_var_reg) * reg_loss + self.log_var_reg
+            self.log("T_weight_reg", torch.exp(-self.log_var_reg), prog_bar=False)
+        else:
+            total_loss = self.reg_loss_coef * reg_loss
+
+        self.log("T_tot", total_loss, prog_bar=True)
+        self.log("T_reg", reg_loss, prog_bar=True)
+        return total_loss
+
+    def validation_step(self, batch, batch_idx):
+        x, temp_true = batch
+        temp_pred = self(x)
+
+        reg_loss = self.compute_masked_regression_loss(temp_pred, temp_true)
+        if self.use_learnable_loss_weights:
+            weight = torch.exp(-self.log_var_reg)
+            total_loss = weight * reg_loss
+            self.log("V_weight_reg", weight, prog_bar=False)
+        else:
+            total_loss = self.reg_loss_coef * reg_loss
+
+        self.log("V_tot", total_loss, prog_bar=True)
+        self.log("V_reg", reg_loss, prog_bar=False)
+
+        mask = ~torch.isnan(temp_true)
+        if mask.sum() > 0:
+            self.val_mse(temp_pred.squeeze()[mask], temp_true[mask])
+            self.val_mae(temp_pred.squeeze()[mask], temp_true[mask])
+            self.val_r2(temp_pred.squeeze()[mask], temp_true[mask])
+        return total_loss
+
+    def on_validation_epoch_end(self):
+        mse = self.val_mse.compute()
+        rmse = torch.sqrt(mse)
+        self.log("metrics/mse", mse)
+        self.log("metrics/rmse", rmse, prog_bar=True)
+        self.log("metrics/mae", self.val_mae.compute())
+        self.log("metrics/r2", self.val_r2.compute(), prog_bar=True)
+        self.val_mse.reset()
+        self.val_mae.reset()
+        self.val_r2.reset()
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=self.scheduler_gamma)
+        return {"optimizer": optimizer, "lr_scheduler": {"scheduler": scheduler, "interval": "epoch"}}
+    
+    
 def create_datasets(X, labels, temp, train_size=0.8, use_norm=False) -> Tuple[TensorDataset]:
     X_train, X_val, y_train, y_val, temp_train, temp_val = train_test_split(X, labels, temp, train_size=train_size)
     
