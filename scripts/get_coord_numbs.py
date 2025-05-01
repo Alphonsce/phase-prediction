@@ -13,7 +13,8 @@ rootutils.setup_root(
     cwd=True
 )
 from src.cif_utils import get_fixed_length_descriptor
-from src.__cutoffs import cutoffs_gpt as cutoffs
+# from src.__cutoffs import cutoffs_gpt as cutoffs
+from src.__vdw_cutoffs import vdw_cutoffs as cutoffs
 
 # ------------ Worker Function ------------
 def process_entry(entry, cutoffs, struct_repeat):
